@@ -1,2 +1,2 @@
 # EONS
-EONS Source Code and update server
+EONS source code and update server
