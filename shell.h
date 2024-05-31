@@ -2,435 +2,292 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "user_system.h"
+
 class shell
 {
 private:
-    /* data */
-public:
-    void core_version();
-    void command_render();
-    void logs();
-    void cd(std::string folder_name);
-    void mkdir(std::string folder_name);
-    void rewrite_file(std::string file_name, std::string new_data);
-    void delete_file(std::string delete_file_name);
-    void rename_file(std::string new_name, std::string data_name);
-    void add_file(std::string name, std::string type, std::string file);
-    int find_directory(std::string directory);
-    void rename_file_dialog();
-    void add_file_dialog();
-    void delete_file_dialog();
-    void rewrite_file_dialog();
-    void read_file();
-    void mkdir_dialog();
-    void cd_dialog();
-    void add_user(std::string user_name, std::string user_password, bool root);
-    void user_check_password();
-    void user_login();
-    void users_system_create();
-    void user_add_dialog();
-    void user_delete(std::string delete_user_name);
-    void user_rename(std::string old_name, std::string new_name);
-    void user_rename_dialog();
-    void user_delete_dialog();
-    void load();
-    std::map<std::string, int> commands_list;
-    bool is_login;
-    bool is_password_check;
-    std::string user_name;
-    std::map<std::string, std::string> user_list;
-    std::map<std::string, std::string> user_permissions;
-    std::vector<std::map<std::string, std::string>> disk;
-    std::vector<std::string> folders_names;
-    std::string directory;
-};
-shell core;
-void shell::core_version()
-{
-    std::cout << "Version of kernel: EONS 1.1.4b\nVersion of BFS: BasicFS 3.0" << std::endl;
-}
-void shell::logs()
-{
-    if (user_permissions[user_name] == "root")
-    {
-        user_check_password();
-        std::cout << disk[0]["logs.txt"] << std::endl;
-    }
-    else
-    {
-        std::cout << "You need root to do this." << std::endl;
-    }
-}
-void shell::command_render()
-{
-    std::string command;
-    std::cout << user_name << " >>> ";
-    std::cin >> command;
-    switch (commands_list[command])
-    {
-    case 1:
-        std::cout << "List of commands\n";
-        for (const auto &[commands, price] : commands_list)
-            std::cout << commands << std::endl;
-        break;
+    bool core_work = true;
+    user_system kernel;
+    std::string version = "0.1";
+    std::string current_command;
+    user current_user;
+    std::vector<std::string> command_list = {"off", "help", "ver", "sideload", "add_user", "exit", "delete_user", "rename_user","write_file","cd","delete_file","add_folder","delete_folder","add_permission","delete_permisison"};
+    std::vector<std::string> commands_with_arguments = {"add_user", "delete_user", "rename_user"};
+    std::map<std::string, std::string> sideload_command_list;
+    int find_command_index(std::string command, std::vector<std::string> vector);
 
+public:
+    std::vector<std::string> parse_command(std::string command);
+    void command_input();
+    void exit();
+    void command_render(std::string command, std::string command_without_arguments);
+    void kernel_version();
+    void help();
+    void sideload();
+    void add_user_dialog(std::string user_name, std::string password);
+    void delete_user_dialog(std::string user_name);
+    void rename_user(std::string user_name, std::string new_name);
+    void user_login();
+    void user_system_create();
+};
+int shell::find_command_index(std::string command, std::vector<std::string> vector)
+{
+    for (int i = 0; i < command_list.size(); i++)
+    {
+        if (command == vector[i])
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+void shell::command_render(std::string command, std::string command_without_arguments)
+{
+    auto vector = parse_command(command);
+    int index = find_command_index(command_without_arguments, command_list);
+    switch (index)
+    {
+    case 0:
+        core_work = false;
+        break;
+    case 1:
+        help();
+        break;
     case 2:
-        add_file_dialog();
+        kernel_version();
         break;
     case 3:
-        is_login = false;
-        user_login();
+        sideload();
         break;
     case 4:
-        core_version();
+        add_user_dialog(vector[1], vector[2]);
         break;
     case 5:
-        std::cout << "Goodbye," << user_name << std::endl;
-        exit(0);
+        exit();
         break;
     case 6:
-        logs();
+        delete_user_dialog(vector[1]);
         break;
     case 7:
-        user_add_dialog();
-        break;
-    case 8:
-        user_delete_dialog();
-        break;
-    case 9:
-        delete_file_dialog();
-        break;
-    case 10:
-        rename_file_dialog();
-        break;
-    case 11:
-        read_file();
-        break;
-    case 12:
-        user_rename_dialog();
-        break;
-    case 13:
-        rewrite_file_dialog();
-        break;
-    case 14:
-        mkdir_dialog();
-        break;
-    case 15:
-        cd_dialog();
-        break;
-    default:
-        std::cout << "Unknown command" << std::endl;
+        rename_user(vector[1], vector[2]);
         break;
     }
-    if (commands_list[command] == 0)
+}
+void shell::command_input()
+{
+    while (core_work)
     {
-        commands_list.erase(command);
-    }
-    disk[0]["logs.txt"] += user_name + " wrote command:" + command + "\n";
-    command_render();
-}
-int shell::find_directory(std::string directory)
-{
-    int index = 0;
-    while (folders_names[index] != directory)
-    {
-        index++;
-    }
-    return index;
-}
-void shell::add_file(std::string name, std::string type, std::string file)
-{
-    if (type == "txt")
-    {
-        name += ".txt";
-        disk[find_directory(directory)][name] = file;
-    }
-    else if (type == "int")
-    {
-        name += ".int";
-        disk[find_directory(directory)][name] = file;
-    }
-}
-void shell::add_file_dialog()
-{
-    std::string data_type;
-    std::string data_name;
-    std::cout << "Write type of data:\n>>> ";
-    std::cin >> data_type;
-    std::cout << "Write name of file:\n>>> ";
-    std::cin >> data_name;
-    std::cout << "Write your file:";
-    std::string new_file;
-    std::cin >> new_file;
-    add_file(data_name, data_type, new_file);
-}
-void shell::rename_file(std::string new_name, std::string data_name)
-{
-    disk[find_directory(directory)][new_name] = disk[find_directory(directory)][data_name];
-    disk[find_directory(directory)].erase(data_name);
-}
-void shell::rename_file_dialog()
-{
-    std::string data_name;
-    std::string new_name;
-    std::cout << "Write name file (for example volder.int):\n>>> ";
-    std::cin >> data_name;
-    std::cout << "Write new file name:\n>>> ";
-    std::cin >> new_name;
-    if (data_name != "logs.txt" && disk[find_directory(directory)].count(data_name) == 1)
-    {
-        rename_file(new_name, data_name);
-    }
-    else
-    {
-        std::cout << "Acsess denied" << std::endl;
-    }
-}
-void shell::delete_file(std::string delete_file_name)
-{
-    disk[find_directory(directory)].erase(delete_file_name);
-}
-void shell::delete_file_dialog()
-{
-    std::string delete_file_name;
-    std::cout << "Write name of file\n>>> ";
-    std::cin >> delete_file_name;
-    if (disk[find_directory(directory)].count(delete_file_name) == 1 && delete_file_name != "logs.txt")
-    {
-        user_check_password();
-        delete_file(delete_file_name);
-    }
-    else
-    {
-        std::cout << "Acsess denied" << std::endl;
-    }
-}
-void shell::read_file()
-{
-    std::string file_name;
-    std::cout << "Write name of file:\n>>> ";
-    std::cin >> file_name;
-    if (file_name != "logs.txt" && disk[find_directory(directory)].count(file_name) == 1)
-    {
-        std::cout << disk[find_directory(directory)][file_name] << std::endl;
-    }
-    else if (file_name == "logs.txt")
-    {
-        logs();
-    }
-    else
-    {
-        std::cout << "File didn't find" << std::endl;
-    }
-}
-void shell::rewrite_file(std::string file_name, std::string new_data)
-{
-    disk[find_directory(directory)][file_name] = new_data;
-}
-void shell::rewrite_file_dialog()
-{
-    std::string file_name;
-    std::string new_data;
-    std::cout << "Write name of file:\n>>> ";
-    std::cin >> file_name;
-    std::cout << "Write new data\n>>> ";
-    std::cin >> new_data;
-    if (disk[find_directory(directory)].count(file_name) == 1 && file_name != "logs.txt")
-    {
-        user_check_password();
-        rewrite_file(file_name, new_data);
-    }
-    else
-    {
-        std::cout << "Acsess denied" << std::endl;
-    }
-}
-void shell::mkdir(std::string folder_name)
-{
-    folders_names.push_back(folder_name);
-    disk.push_back({});
-}
-void shell::mkdir_dialog()
-{
-    std::string folder_name;
-    std::cout << "Write name of folder:\n>>> ";
-    std::cin >> folder_name;
-    mkdir(folder_name);
-}
-void shell::cd(std::string folder_name)
-{
-    directory = folder_name;
-}
-void shell::cd_dialog()
-{
-    std::string folder_name;
-    std::cout << "Write name of folder:\n>>> ";
-    std::cin >> folder_name;
-    cd(folder_name);
-}
-void shell::user_login()
-
-{
-    if (is_login == false)
-    {
-        std::string user_password;
-        std::string user_name1;
-        std::cout << "Please,login" << std::endl;
-        std::cout << "User_name:\n>>> ";
-        std::cin >> user_name1;
-        std::cout << "Password:\n>>> ";
-        std::cin >> user_password;
-        if (user_list[user_name1] == user_password && user_list.count(user_name1) == 1)
+        std::cout << current_user.user_name << " >>> ";
+        std::cin >> current_command;
+        std::string command_without_arguments = current_command;
+        getline(std::cin, current_command);
+        if (find_command_index(command_without_arguments, command_list) != -1 && find_command_index(current_command, commands_with_arguments) != -1)
         {
-            is_login = true;
-            disk[0]["logs.txt"] += user_name1 + " is login\n";
-            std::cout << "Hello," << user_name1 << std::endl;
-            user_name = user_name1;
-            command_render();
+            command_render(current_command, command_without_arguments);
+        }
+        else if (find_command_index(command_without_arguments, command_list) != -1 && find_command_index(current_command, commands_with_arguments) == -1)
+        {
+            command_render(current_command, command_without_arguments);
         }
         else
         {
-            std::cout << "Password is wrong, try again or user didn't find" << std::endl;
-            exit(0);
+            if (sideload_command_list.find(current_command) == sideload_command_list.end())
+            {
+                std::cout << "Unknown command or wrong arguments" << std::endl;
+            }
+            else
+            {
+                system(sideload_command_list[current_command].c_str());
+            }
         }
     }
 }
-void shell::users_system_create()
+void shell::user_system_create()
 {
     std::string user_name;
-    std::string user_password;
-    std::cout << "Write name of user account:\n>>> ";
+    std::string password;
+    user first_user;
+    std::cout << "Welcome to the DuoKernel! Please write name of your new user and password" << std::endl;
+    std::cout << "Write name of user\n>>> ";
     std::cin >> user_name;
-    std::cout << "Write password:\n>>> ";
-    std::cin >> user_password;
-    std::cout << "User created" << std::endl;
-    user_list[user_name] = user_password;
-    disk[0]["logs.txt"] += user_name + " created\n";
-    user_permissions[user_name] = "root";
+    std::cout << "Write password\n>>> ";
+    std::cin >> password;
+    first_user.set_name(user_name);
+    first_user.set_password(password);
+    first_user.add_permission(root);
+    kernel.add_user(first_user);
+    std::cout << "User is created. Please,login" << std::endl;
+}
+void shell::rename_user(std::string user_name, std::string new_name)
+{
+    kernel.user_rename(user_name, new_name);
+    current_user.user_name = new_name;
+}
+void shell::help()
+{
+    std::cout << "List of commands\n";
+    for (int i = 0; i < command_list.size(); i++)
+    {
+        std::cout << command_list[i] << std::endl;
+    }
+}
+void shell::user_login()
+{
+    std::string user_name;
+    std::string password;
+    if (!kernel.is_empty())
+    {
+        std::cout << "Write name of user\n>>> ";
+        std::cin >> user_name;
+        std::cout << "Write password\n>>> ";
+        std::cin >> password;
+        if (kernel.login_user(user_name, password))
+        {
+            current_user.user_name = user_name;
+            command_input();
+        }
+        else
+        {
+            std::cout << "Wrong name or password" << std::endl;
+        }
+    }
+    else
+    {
+        user_system_create();
+    }
+}
+void shell::add_user_dialog(std::string user_name, std::string password)
+{
+    user new_user;
+    if (new_user.set_name(user_name))
+    {
+        new_user.set_password(password);
+        new_user.add_permission(read_file);
+        new_user.add_permission(write_file);
+        new_user.add_permission(delete_file);
+        kernel.add_user(new_user);
+        std::cout << "User is created" << std::endl;
+    }
+    else
+    {
+        std::cout << "This user has already created." << std::endl;
+    }
+}
+void shell::delete_user_dialog(std::string delete_user)
+{
+    if (delete_user != current_user.user_name)
+    {
+        kernel.delete_user(delete_user);
+        std::cout << "User is deleted" << std::endl;
+    }
+    else
+    {
+        std::cout << "You can't delete your user." << std::endl;
+    }
+    auto iter = user_names.begin();
+    for (int i = 0; i < user_names.size(); i++)
+    {
+        if (*(iter) == delete_user)
+        {
+            user_names.erase(iter);
+        }
+        iter++;
+    }
+}
+void shell::kernel_version()
+{
+    std::cout << "DuoKernel version: " << version << std::endl;
+}
+void shell::exit()
+{
+    current_user.user_name = "";
     user_login();
 }
-void shell::add_user(std::string user_name, std::string user_password, bool root)
+void shell::sideload()
 {
-    user_list[user_name] = user_password;
-    if (root == true)
+    std::string run_command = "";
+    std::string command_name;
+    std::string folder;
+    std::string filename;
+    int selection;
+    std::cout << "Enter type of app to sideload:\n"
+                 "1. Python script\n"
+                 "2. Lua script\n"
+                 "3. Node.js script\n"
+                 "4. Node.js package (via npm)\n"
+                 "5. Deno script (supports TypeScript)\n"
+                 "> ";
+    std::cin >> selection;
+    if (selection > 5)
     {
-        user_permissions[user_name] = "root";
-        disk[0]["logs.txt"] += user_name + " created\n";
+        std::cout << "This type of app does not exists." << std::endl;
+        return;
+    }
+    std::cout << "Enter command name:\n"
+                 "> ";
+    std::cin >> command_name;
+    if (command_name.empty())
+    {
+        std::cout << "Can't create a command with empty name." << std::endl;
+        return;
+    }
+    if (selection == 4)
+    {
+        std::cout << "Enter name of folder with package:\n"
+                     "> ";
+        std::cin >> folder;
+        run_command = "cd " + folder + " && npm run start:prod";
     }
     else
     {
-        disk[0]["logs.txt"] += user_name + " created\n";
+        std::cout << "Enter name of script (without filename extension):\n"
+                     "> ";
+        std::cin >> filename;
+        switch (selection)
+        {
+        case 1:
+            run_command = "python " + filename + ".py";
+            break;
+        case 2:
+            run_command = "lua " + filename + ".lua";
+            break;
+        case 3:
+            run_command = "node " + filename + ".js";
+            break;
+        case 5:
+            run_command = "deno run " + filename;
+            char is_ts;
+            std::cout << "Is this a TypeScript script? (y/n)\n"
+                         "> ";
+            std::cin >> is_ts;
+            if (is_ts == 'y')
+            {
+                filename += ".ts";
+            }
+            else
+            {
+                filename += ".js";
+            }
+        }
     }
+
+    sideload_command_list[command_name] = run_command;
 }
-void shell::user_check_password()
+std::vector<std::string> shell::parse_command(std::string command)
 {
-    std::string password;
-    std::cout << "Write password:\n>>> ";
-    std::cin >> password;
-    if (user_list[user_name] == password)
+    std::vector<std::string> result;
+    std::string part = "";
+    command = command + " "; // если последний символ - не пробел, последнего push_back не произойдет.
+    for (char ch : command)
     {
-        std::cout << "Password is right" << std::endl;
-        is_password_check = true;
+        if (ch == ' ') // пропуск всех пробелов
+        {
+            result.push_back(part);
+            part = "";
+            continue;
+        }
+        part += ch;
     }
-    else
-    {
-        std::cout << "Password is wrong" << std::endl;
-        command_render();
-    }
-}
-void shell::user_add_dialog()
-{
-    std::string user_name1;
-    std::string user_password;
-    std::string user_root;
-    std::cout << "Write name of user account:\n>>> ";
-    std::cin >> user_name1;
-    std::cout << "Write password:\n>>> ";
-    std::cin >> user_password;
-    std::cout << "Do you want to make this user root? Y/N ";
-    std::cin >> user_root;
-    if (user_root == "Y" && user_permissions[user_name] == "root")
-    {
-        user_check_password();
-        bool user_root = true;
-        add_user(user_name1, user_password, user_root);
-        std::cout << "User created" << std::endl;
-    }
-    else
-    {
-        bool user_root = false;
-        add_user(user_name1, user_password, user_root);
-        std::cout << "User created without root" << std::endl;
-    }
-}
-void shell::user_delete(std::string delete_user_name)
-{
-    user_list.erase(delete_user_name);
-    disk[0]["logs.txt"] += user_name + " created\n";
-}
-void shell::user_rename(std::string old_name, std::string new_name)
-{
-    user_list[new_name] = user_list[old_name];
-    user_permissions[new_name] = user_permissions[old_name];
-    user_list.erase(old_name);
-    user_permissions.erase(old_name);
-    disk[0]["logs.txt"] += old_name + " is renamed" + " to " + new_name + "\n";
-    user_name = new_name;
-}
-void shell::user_rename_dialog()
-{
-    std::string user_name1;
-    std::string new_name;
-    std::cout << "Write username:\n>>> ";
-    std::cin >> user_name1;
-    std::cout << "Write new username:\n>>> ";
-    std::cin >> new_name;
-    if (user_list.count(user_name1) == 1)
-    {
-        user_check_password();
-        user_rename(user_name1, new_name);
-    }
-    else
-    {
-        std::cout << "User didn't found or you don't have permissions to do this" << std::endl;
-    }
-}
-void shell::user_delete_dialog()
-{
-    std::string delete_user_name;
-    std::cout << "Write name of user account\n"
-              << user_name << " >>> ";
-    std::cin >> delete_user_name;
-    if (user_list.count(delete_user_name) == 1 && user_permissions[user_name] == "root" && delete_user_name != user_name)
-    {
-        user_check_password();
-        user_delete(delete_user_name);
-        std::cout << "User is delete" << std::endl;
-    }
-    else
-    {
-        std::cout << "User isn't exist or you don't have root to do this or you try delete your account" << std::endl;
-    }
-}
-void shell::load()
-{
-    commands_list["help"] = 1;
-    commands_list["create_file"] = 2;
-    commands_list["exit"] = 3;
-    commands_list["neofetch"] = 4;
-    commands_list["off"] = 5;
-    commands_list["logs"] = 6;
-    commands_list["add_user"] = 7;
-    commands_list["delete_user"] = 8;
-    commands_list["delete_file"] = 9;
-    commands_list["rename_file"] = 10;
-    commands_list["read_file"] = 11;
-    commands_list["rename_user"] = 12;
-    commands_list["rewrite_file"] = 13;
-    commands_list["mkdir"] = 14;
-    commands_list["cd"] = 15;
-    disk.push_back({{"logs.txt", "System is load\n"}});
-    folders_names.push_back("/main");
-    directory = folders_names[0];
-    users_system_create();
+    return result;
 }
