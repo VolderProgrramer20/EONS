@@ -1,6 +1,6 @@
-#include <vector>
 #include <iostream>
 #include <map>
+#include <vector>
 #include "file.h"
 class bfs
 {
@@ -9,6 +9,7 @@ private:
     std::string current_dir;
     bool check_file_name(std::string file_name, std::string folder_name);
     bool check_folder_name(std::string folder_name);
+    void check_file_system();
 
 public:
     std::map<std::string, std::vector<file>> disk;
@@ -21,6 +22,13 @@ public:
     void rename_folder(std::string folder_name, std::string new_name);
     void cd(std::string folder_name);
 };
+void bfs::check_file_system()
+{
+    for (int i = 0; i < folder_names.size(); i++)
+    {
+        std::cout << folder_names[i] << std::endl;
+    }
+}
 bool bfs::check_file_name(std::string file_name, std::string folder_name)
 {
     for (int i = 0; i < disk[folder_name].size(); i++)
@@ -32,6 +40,7 @@ bool bfs::check_file_name(std::string file_name, std::string folder_name)
     }
     return true;
 }
+bfs file_system;
 bool bfs::check_folder_name(std::string folder_name)
 {
     for (int i = 0; i < folder_names.size(); i++)
